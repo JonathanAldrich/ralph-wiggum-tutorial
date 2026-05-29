@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}Pac-Man - Ralph Wiggum Tutorial{% endblock %}
+
+{% block content %}
+<main class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-2 text-gray-800">Pac-Man</h1>
+    <p class="text-gray-600 mb-6 max-w-2xl">
+        A playable, single-level Pac-Man built on the same React Islands stack as the
+        <a href="/" class="text-blue-600 hover:underline">Hello demo</a>. Unlike Hello, this
+        page showcases a canvas render loop, animation, and richer interactive state — all
+        client-side, with no backend persistence.
+    </p>
+
+    {# Server-rendered control instructions (visible before and after hydration) #}
+    <div class="mb-6 text-sm text-gray-600">
+        <p class="font-semibold text-gray-700 mb-1">Controls</p>
+        <ul class="list-disc list-inside space-y-1">
+            <li>Move: <kbd class="px-1 bg-gray-200 rounded">Arrow keys</kbd> or
+                <kbd class="px-1 bg-gray-200 rounded">W</kbd>
+                <kbd class="px-1 bg-gray-200 rounded">A</kbd>
+                <kbd class="px-1 bg-gray-200 rounded">S</kbd>
+                <kbd class="px-1 bg-gray-200 rounded">D</kbd>
+            </li>
+            <li>Pause / resume: <kbd class="px-1 bg-gray-200 rounded">P</kbd></li>
+            <li>On touch devices, use the on-screen D-pad below the board.</li>
+        </ul>
+    </div>
+
+    {# React Island Mount Point #}
+    {# The frontend finds this element and mounts PacmanIsland. No data-props are #}
+    {# required because the game model is created entirely on the client. #}
+    <div
+        data-island="pacman"
+        class="bg-white rounded-lg shadow p-4 inline-block"
+    >
+        {# Non-JS fallback + initial loading state #}
+        <noscript>
+            <p class="text-gray-600 mb-4">JavaScript is required to play Pac-Man.</p>
+        </noscript>
+
+        <div class="animate-pulse" style="width: 380px; max-width: 100%;">
+            <div class="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
+            <div class="h-64 bg-gray-200 rounded"></div>
+        </div>
+    </div>
+</main>
+{% endblock %}

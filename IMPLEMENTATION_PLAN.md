@@ -2,63 +2,60 @@
 
 ## Status
 
-> **Overall: ~95% Complete — Presentation fully implemented, minor polish remaining**
+> **Active feature: Pac-Man browser game page (`/pacman`).**
+> Spec: `specs/issue-20260529-4bf5f0a8-build-pacman-page.md`
+> **State: ✅ COMPLETE — implemented, tested, and validated end-to-end.**
 
-All 16 tests pass (12 backend + 4 frontend). The 46+ slide reveal.js presentation is fully built with all sections, D3.js visualization, code examples, and research citations.
+The Pac-Man showcase page is fully implemented and additive (Hello at `/` is
+untouched). All validation suites pass with zero regressions:
 
----
+- Backend: `pytest tests/` → 18 passed (6 Pac-Man + 12 Hello).
+- Frontend: `vitest run` → 29 passed (16 engine + 9 island + 4 Hello).
+- Typecheck: `mypy src/` + `tsc --noEmit` → clean.
+- Lint: `flake8 src/ tests/` + `eslint src/` → clean.
+- E2E: `playwright test` → 17 passed (8 Pac-Man + 9 Hello).
 
-## 🟡 REMAINING ITEMS
+## What was built
 
-### P3: Cosmetic / Low Priority
+### Backend
+- `src/app/views/pacman.py` — `pacman_bp` blueprint, single `GET '/'` route
+  rendering `pacman/index.html` (no API/persistence).
+- `src/app/views/__init__.py` — registers `pacman_bp` with `url_prefix='/pacman'`.
+- `src/app/templates/pacman/index.html` — extends `base.html`; `data-island="pacman"`
+  mount point, server-rendered control instructions, no-JS fallback.
+- `src/app/templates/base.html` — added a global nav bar (Hello / Pac-Man).
+- `tests/test_pacman.py` — route 200, heading, mount point, instructions, plus
+  explicit Hello no-regression + nav-link assertions.
 
-- Fix typo in folder name: `.github/skills/python-code-simiplifier/` → `python-code-simplifier/`
-  - Would require updating any references in specs and AGENTS.md
+### Frontend (`frontend/src/islands/pacman/`)
+- `game/types.ts` — tiles, direction, phases, entity & `GameState` shapes.
+- `game/config.ts` — all constants (sizes, speeds, scoring, frightened
+  duration/flash, key maps, `GHOST_STRATEGY='random'` documented).
+- `game/level.ts` — procedurally generated 19×19 pillar maze (provably
+  connected), pellet/power placement, spawns, tunnel row.
+- `game/engine.ts` — deterministic state machine (discrete tile + progress
+  model, seeded LCG for ghost randomness, delta clamping, pellet/power scoring,
+  frightened window + flash warning, cumulative ghost-eat multipliers,
+  life loss/respawn, win/game-over, tunnel wrap, pause/resume).
+- `game/render.ts` — canvas drawing (guards null ctx for jsdom).
+- `PacmanIsland.tsx` — canvas + rAF loop (handle in ref, cancelled on cleanup),
+  HUD/overlays in React state only, keyboard (arrows/WASD/P) with
+  `preventDefault`, auto-pause on visibility change, restart/pause buttons.
+- `components/TouchControls.tsx` — on-screen D-pad (`touch-action: none`).
+- `index.tsx` — mount entry; registered in `frontend/src/main.ts`.
+- `__tests__/engine.test.ts` (16) + `__tests__/PacmanIsland.test.tsx` (9).
+- `e2e/pacman.spec.ts` — DOM/HUD assertions only (no canvas-pixel/score timing).
 
----
+## Learnings (for future loops)
+- Playwright locator is `getByLabel` (NOT `getByLabelText`, which is RTL-only).
+- `script/server` runs Vite + Flask; if Vite dies (e.g. SIGHUP), island JS
+  fails with `ERR_CONNECTION_REFUSED` to :5173 and ALL e2e fail as "hidden".
+  Start it detached so it survives, then `playwright test` reuses it.
+- `npx playwright install chromium` was required (only ffmpeg was cached).
+- Frontend tests under `frontend/src/**` ARE typechecked+linted (tsconfig
+  include `["src"]`); avoid jest-dom matchers there — use vitest core matchers.
+- ESLint `no-self-assign` (recommended) flags `x = x` patterns — avoid.
 
-## ✅ COMPLETED ITEMS
-
-### Infrastructure (Flask/React App) — 100% Complete
-- ✅ `.devcontainer/` — Python 3.12, PostgreSQL, Node.js with post-create hook
-- ✅ `src/app/` — Flask app factory, models, views, templates, errors, logging, schemas, controllers
-- ✅ `frontend/` — React Islands, Vite, TypeScript, Tailwind, ESLint, Vitest
-- ✅ `scripts/` — bootstrap, setup, server, test, lint, typecheck, update, console, db-seed, Procfile
-- ✅ `tests/` — 12 backend tests passing (conftest.py, test_hello.py)
-- ✅ `frontend/tests/` — 4 frontend tests passing (HelloIsland.test.tsx)
-- ✅ `migrations/` — Alembic initialized with hello table migration
-- ✅ `.github/workflows/ci.yml` — CI pipeline
-- ✅ `.pre-commit-config.yaml` — Pre-commit hooks
-- ✅ Config files — `.gitignore`, `.env.example`, `requirements.txt`, `pyproject.toml`
-
-### Documentation — Complete
-- ✅ `AGENTS.md` — Operational commands for build/run/test
-- ✅ `README.md` — Project overview, setup, loop explanation, tech stack
-
-### Presentation — 100% Complete
-- ✅ P0-A: Sections 1–9 (Slides 1–25) — All implemented with vertical nesting
-- ✅ P0-B: Sections 10–17 (Slides 26–46) — All implemented with research citations
-- ✅ P0-C: Interactive D3.js visualization (Slide 13) — Persona switching, hulls, tooltips
-- ✅ P1: Code examples from real repo files embedded in slides
-- ✅ P2: data-background, vertical nesting, highlight plugin, speaker notes
-- ✅ `presentation/package.json` — reveal.js ^6.0.1 dependency
-- ✅ `presentation/index.html` — Full 52-section deck with Dracula theme
-
-### Ralph Loop Infrastructure — Complete
-- ✅ `loop.sh` — Fully functional (117 lines), modes, max iterations, completion promise
-- ✅ `PROMPT_plan.md` — Plan mode prompt (22 lines)
-- ✅ `PROMPT_build.md` — Build mode prompt (21 lines)
-- ✅ `.github/agents/plan-agent.md` — Plan agent definition (105 lines)
-- ✅ `.github/agents/plan-reviewer.md` — Plan reviewer definition (20 lines)
-- ✅ `.github/skills/` — All 4 skills defined (git-commit 189L, python-code-simiplifier 63L, test-in-browser 102L, typescript-code-simplifier 62L)
-- ✅ `.vscode/mcp.json` — Playwright MCP server config (11 lines)
-
----
-
-## Implementation Notes
-
-- **No `src/lib/` directory** — project uses `src/app/` as the backend module
-- **All tests green** — 12 backend + 4 frontend, no skipped/flaky tests
-- **All files referenced in spec exist** — agents, skills, loop.sh, prompts all populated
-- **D3.js loaded via CDN** in presentation/index.html (not a package.json dep per spec)
-- **Presentation fully complete** — 52 sections, all 17 topic groups implemented
+## Notes / constraints (still apply)
+- No backend persistence or DB migration; gameplay is client-side.
+- Ghost AI is v1 random-valid-direction by design (documented in `config.ts`).
