@@ -1,0 +1,43 @@
+Pac-Man /pacman feature — implementation reasoning
+
+WHY the design choices (for future maintainers):
+
+Engine model (discrete tile + progress fraction, not free pixels):
+- Decisions (turns, pellet eating, ghost direction choice) happen exactly at
+  tile centers. This removes floating-point alignment ambiguity, making every
+  transition reproducible and unit-testable without a DOM.
+- Determinism for "random" ghosts comes from a seeded LCG stored in GameState
+  (rngState). Tests pass a fixed seed so ghost movement never flakes, while
+  gameplay seeds from Date.now(). This satisfies the spec's v1 random strategy
+  (random valid direction at intersections, no chase AI) AND testability.
+
+Frame-delta clamping (MAX_STEP_MS):
+- Backgrounding a tab produces a huge rAF delta on return. Clamping prevents
+  the sim fast-forwarding/skipping. Combined with explicit + visibility pause.
+
+React/canvas split:
+- The engine state lives in a ref; React state mirrors only discrete HUD/
+  overlay values (score, lives, phase). The rAF loop advances+draws every
+  frame without triggering React re-renders. The rAF handle is stored in a ref
+  and cancelled on cleanup so StrictMode's dev double-invoke can't spawn
+  duplicate loops.
+
+Maze generated procedurally (pillar maze) rather than hand-drawn ASCII:
+- Single-tile wall pillars at (even,even) interior cells never disconnect the
+  corridors, so the level is provably fully connected/solvable without manual
+  verification. Tunnel = open border tiles on the middle row with column wrap.
+
+Testing importance:
+- Gameplay timing is non-deterministic in Playwright, so E2E asserts only on
+  DOM/HUD/overlay state (start on input, restart resets, no Hello regression).
+  All scoring/collision/frightened/win/game-over/tunnel rules are locked down
+  by the 16 deterministic engine unit tests — these are the real safety net.
+- test_pacman.py is strict-typed (FlaskClient[Any] + from __future__ import
+  annotations) because the pre-commit mypy hook applies pyproject strict=true
+  to staged test files (script/typecheck only covers src/).
+
+Gotchas captured in AGENTS.md/IMPLEMENTATION_PLAN.md:
+- Playwright uses getByLabel (not RTL's getByLabelText).
+- script/server's Vite child can be SIGHUP'd; if it dies, islands fail with
+  ERR_CONNECTION_REFUSED to :5173 and every e2e reports the mount as "hidden".
+- npx playwright install chromium needed (only ffmpeg cached).
