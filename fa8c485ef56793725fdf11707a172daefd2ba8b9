@@ -1,0 +1,25 @@
+## AI Agent Reasoning
+
+### Context
+Implemented the full CLI Homework Auditor feature per
+specs/feature-hwq-cli-homework-auditor.md and IMPLEMENTATION_PLAN.md.
+The feature was entirely absent from the codebase.
+
+### Decisions Made
+- LLMClient Protocol (structural typing) in question_generator.py instead
+  of importing GitHubModelsClient directly — avoids circular imports and
+  lets FakeClient satisfy the type without subclassing.
+- bare requests.get for attachment downloads (no Authorization header) —
+  Canvas pre-signed S3 URLs reject a second auth mechanism with HTTP 400.
+- /inference suffix in GitHub Models base_url is required — the OpenAI SDK
+  appends /chat/completions; omitting /inference causes every request to 404.
+- per_page passed as str '50' (not int) to satisfy requests params typing
+  under mypy strict mode with types-requests stubs.
+- types-requests added to .pre-commit-config.yaml mypy additional_dependencies
+  so the pre-commit mypy hook has the same stubs as the local environment.
+
+### Trade-offs
+- 6000-word truncation is conservative (GitHub Models free tier cap is ~8K
+  tokens); accepted to give the system prompt room within the budget.
+- FakeClient in tests does not subclass GitHubModelsClient to keep tests
+  isolated from the real OpenAI dep — Protocol covers this cleanly.
