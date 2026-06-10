@@ -5,7 +5,7 @@ description = "Flask + React Islands tutorial application"
 requires-python = ">=3.12"
 
 [tool.pytest.ini_options]
-pythonpath = ["src"]
+pythonpath = ["src", "."]
 testpaths = ["tests"]
 python_files = "test_*.py"
 python_functions = "test_*"
