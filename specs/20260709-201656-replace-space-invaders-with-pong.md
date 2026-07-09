@@ -123,7 +123,8 @@ IMPORTANT: Execute every step in order, top to bottom.
 
 ### Wire the new engine into the island
 - Update `frontend/src/islands/game/GameIsland.tsx` to instantiate `Pong` instead of `SpaceInvaders`.
-- Let the island own the DOM-facing score/status output, either by subscribing to engine state changes or by reading a narrow public state interface from the engine.
+- Let the island own the DOM-facing score/status output, either by subscribing to engine state changes (e.g., via a callback like `onStateChange` passed to the constructor) or by reading a narrow public state interface from the engine. Ensure this does not trigger React re-renders on every frame, only when score or match state actually changes.
+- Consider whether the DOM score surface should be visually hidden (`sr-only`) for screen readers and Playwright, or styled as a visible UI element that supplements or replaces the canvas HUD.
 - Keep the fixed canvas lifecycle behavior intact: create on mount, start once, destroy on unmount.
 - Preserve the current island registry and route bootstrapping so no changes are needed to `frontend/src/main.ts` or Flask blueprint wiring beyond terminology updates if required.
 
