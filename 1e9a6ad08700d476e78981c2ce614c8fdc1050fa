@@ -1,0 +1,39 @@
+Implementation notes — Pong replacement
+
+WHY the design:
+- Single RAF loop in Pong.ts (mirrors the prior SpaceInvaders pattern) so update
+  order is deterministic and simulation stops cleanly on win/lose. update(dt) is
+  public and driven directly by unit tests; the loop only advances in `playing`.
+- dt clamp (0.05s) prevents ball/paddle teleporting after a backgrounded tab —
+  addresses the spec's large-dt edge case together with per-entity clamping.
+- Reflection angle derived from (ballCenterY - paddleCenterY)/(halfHeight),
+  clamped to ±BALL_MAX_BOUNCE_ANGLE (60°, < 90° so the ball always makes
+  horizontal progress). Centre hit ≈ horizontal, edge hit ≈ steep — prevents the
+  "always straight back" degenerate rally the spec calls out.
+- Collision only fires when the ball moves *into* a paddle (vx sign) and the ball
+  is repositioned to the paddle face on contact, so it can't re-trigger while
+  overlapping on the way out (no double-bounce sticking, no tunneling).
+- Scoring recentres the ball and arms SERVE_DELAY immediately, so one boundary
+  crossing counts exactly once (spec edge case). Serve heads toward the conceding
+  side.
+- AI_SPEED (340) deliberately < PADDLE_SPEED (460) and it recentres when the ball
+  moves away → competent but beatable, never a perfect mirror.
+
+WHY the DOM status surface:
+- The canvas is opaque to a11y tools and Playwright. The engine pushes a
+  PongPublicState via onStateChange ONLY when status/score change, so the island
+  can render a role="status" region (data-testid hooks) without re-rendering
+  React every frame. This makes E2E deterministic (assert text, not pixels) and
+  improves accessibility, with no backend API/DB/persistence added.
+
+TESTING importance:
+- Pong.test.ts drives update(dt) with a stubbed 2D context to cover pure logic:
+  state machine, paddle clamping, AI cap/bounds/beatability, reflection + angle
+  variance, wall bounce, both-side scoring + single-count reset, win & lose at 11,
+  restart, key-repeat not skipping screens, onStateChange, and destroy cleanup.
+- pong.spec.ts asserts the observable browser flow against the DOM surface;
+  the endgame test lets the idle player concede to 11 (~40s) to exercise real
+  win/lose + restart without test-only engine hooks.
+
+GOTCHA fixed during E2E: pressing Space right after page.goto raced island mount;
+added `await expect(canvas).toBeVisible()` before the first keypress.
