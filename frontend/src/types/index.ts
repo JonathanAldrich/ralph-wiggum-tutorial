@@ -9,7 +9,7 @@
 /**
  * Props passed to islands via the `data-props` attribute.
  *
- * Each island receives its initial data from the server. The Space Invaders
+ * Each island receives its initial data from the server. The Pong
  * game needs no server data (it is fully client-side), but the type is kept
  * generic so future islands can pass typed initial state.
  */

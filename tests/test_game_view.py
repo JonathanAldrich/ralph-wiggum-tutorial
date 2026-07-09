@@ -1,4 +1,4 @@
-"""Tests for the Space Invaders game view.
+"""Tests for the Pong game view.
 
 The game is entirely client-side, so the backend's only responsibility is
 to serve the HTML shell containing the React Island mount point. These tests
@@ -17,10 +17,10 @@ class TestGamePage:
     """Tests for the main HTML page that hosts the game."""
 
     def test_index_returns_html(self, client: FlaskClient[Any]) -> None:
-        """GET / should return a 200 HTML page."""
+        """GET / should return a 200 HTML page advertising Pong."""
         response = client.get('/')
         assert response.status_code == 200
-        assert b'Space Invaders' in response.data
+        assert b'Pong' in response.data
 
     def test_index_contains_island_mount(self, client: FlaskClient[Any]) -> None:
         """Index page should contain the game island mount point."""
@@ -28,9 +28,9 @@ class TestGamePage:
         assert b'data-island="game"' in response.data
 
     def test_index_title(self, client: FlaskClient[Any]) -> None:
-        """The page <title> should advertise Space Invaders."""
+        """The page <title> should advertise Pong."""
         response = client.get('/')
-        assert b'<title>Space Invaders</title>' in response.data
+        assert b'<title>Pong</title>' in response.data
 
 
 class TestErrorHandlers:

@@ -1,5 +1,5 @@
 /**
- * Core game type definitions for the Space Invaders engine.
+ * Core game type definitions for the Pong engine.
  *
  * These types are deliberately framework-agnostic (no React, no DOM beyond
  * the canvas context passed to the Renderer). Keeping them isolated lets the
@@ -19,28 +19,37 @@ export interface Dimensions {
 }
 
 /**
- * High-level game lifecycle states.
- *
- * - `start`    — title screen, waiting for the player to begin.
- * - `playing`  — active gameplay; the only state the game loop simulates.
- * - `gameover` — player was hit or aliens reached the bottom.
- * - `won`      — every alien has been destroyed.
- *
- * The loop only advances simulation in `playing`; other states just render a
- * static screen, which is why the loop can keep running cheaply after the
- * round ends (and lets the player restart with Space).
- */
-export type GameState = 'start' | 'playing' | 'gameover' | 'won'
-
-/**
- * Anything with a position, size, and alive flag.
- *
- * `alive` is the single source of truth for whether an entity participates in
- * updates, rendering, and collision checks. Dead entities are pruned by their
- * owning collection (e.g. the bullets array) rather than mutated in place.
+ * Anything with a position and size — the shared shape used for the
+ * axis-aligned collision tests between the ball and the paddles.
  */
 export interface Entity {
   position: Position
   dimensions: Dimensions
-  alive: boolean
+}
+
+/**
+ * High-level match lifecycle states.
+ *
+ * - `start`   — title screen, waiting for the player to serve the first ball.
+ * - `playing` — active rally; the only state the game loop simulates.
+ * - `won`     — the player reached MAX_SCORE first.
+ * - `lost`    — the computer reached MAX_SCORE first.
+ *
+ * The loop only advances simulation in `playing`; other states just render a
+ * static screen, which is why the loop can keep running cheaply after the
+ * match ends (and lets the player restart with Space).
+ */
+export type GameState = 'start' | 'playing' | 'won' | 'lost'
+
+/**
+ * The narrow, DOM-facing snapshot the island subscribes to.
+ *
+ * The island renders an accessible (and Playwright-assertable) score/status
+ * surface from this. It is emitted only when the status or a score actually
+ * changes, so React never re-renders on every animation frame.
+ */
+export interface PongPublicState {
+  status: GameState
+  playerScore: number
+  computerScore: number
 }

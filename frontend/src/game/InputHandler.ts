@@ -1,11 +1,12 @@
 /**
- * InputHandler — keyboard state tracking for the game.
+ * InputHandler — keyboard state tracking for Pong.
  *
  * Uses an event-driven "held keys" set rather than reacting to individual
  * keypress events, because gameplay needs to poll the *current* state every
- * frame ("is left held right now?") instead of responding to discrete events.
- * The handler also exposes an edge-triggered `consumeStart()` so the title/end
- * screens advance on a single Space press without auto-repeat re-triggering.
+ * frame ("is Up held right now?") instead of responding to discrete events.
+ * The handler also exposes an edge-triggered `consumeStart()` so the
+ * start/win/lose screens advance on a single Space press without auto-repeat
+ * skipping straight past them (a spec edge case).
  *
  * `destroy()` removes the listeners — essential for the React Island unmount
  * path so we don't leak global handlers across navigations or HMR reloads.
@@ -24,13 +25,14 @@ export class InputHandler {
     const e = event as KeyboardEvent
     // Prevent the page from scrolling when the player uses arrows/space.
     if (
-      e.code === 'ArrowLeft' ||
-      e.code === 'ArrowRight' ||
+      e.code === 'ArrowUp' ||
+      e.code === 'ArrowDown' ||
       e.code === 'Space'
     ) {
       e.preventDefault()
     }
-    // Edge-detect Space: only latch on the initial press, not on auto-repeat.
+    // Edge-detect Space: only latch on the initial press, not on auto-repeat,
+    // so holding Space can't blow past the start/end screens.
     if (e.code === 'Space' && !this.held.has('Space')) {
       this.startPressed = true
     }
@@ -41,22 +43,19 @@ export class InputHandler {
     this.held.delete((event as KeyboardEvent).code)
   }
 
-  isLeft(): boolean {
-    return this.held.has('ArrowLeft')
+  /** True while the player is holding ArrowUp (move paddle up). */
+  isUp(): boolean {
+    return this.held.has('ArrowUp')
   }
 
-  isRight(): boolean {
-    return this.held.has('ArrowRight')
-  }
-
-  /** True while Space is held — used to fire (rate-limited by the Player). */
-  isShoot(): boolean {
-    return this.held.has('Space')
+  /** True while the player is holding ArrowDown (move paddle down). */
+  isDown(): boolean {
+    return this.held.has('ArrowDown')
   }
 
   /**
    * Edge-triggered Space read for menu transitions. Returns true exactly once
-   * per physical press, so a single tap starts/restarts the game instead of
+   * per physical press, so a single tap starts/restarts the match instead of
    * instantly skipping screens while the key is held.
    */
   consumeStart(): boolean {
