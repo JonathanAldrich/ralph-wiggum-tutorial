@@ -1,19 +1,21 @@
 /**
  * InputHandler — keyboard state tracking for the game.
  *
- * Uses an event-driven "held keys" set rather than reacting to individual
- * keypress events, because gameplay needs to poll the *current* state every
- * frame ("is left held right now?") instead of responding to discrete events.
- * The handler also exposes an edge-triggered `consumeStart()` so the title/end
- * screens advance on a single Space press without auto-repeat re-triggering.
+ * Tracks currently-held keys for continuous polling (`isLeft()`, etc.) and
+ * exposes edge-triggered consumption for one-shot actions (`consumeUp()`, etc.)
+ * so discrete Frogger hops fire exactly once per key-press without auto-repeat
+ * firing again while the key is held.
  *
- * `destroy()` removes the listeners — essential for the React Island unmount
- * path so we don't leak global handlers across navigations or HMR reloads.
+ * `destroy()` removes all listeners — essential for the React Island unmount
+ * path to avoid leaking global handlers across HMR reloads.
  */
 export class InputHandler {
   private readonly held = new Set<string>()
-  /** Latched when Space transitions from up→down, cleared on consume. */
   private startPressed = false
+  private upPressed = false
+  private downPressed = false
+  private leftPressed = false
+  private rightPressed = false
 
   constructor(private readonly target: Window | HTMLElement = window) {
     this.target.addEventListener('keydown', this.onKeyDown)
@@ -22,17 +24,16 @@ export class InputHandler {
 
   private onKeyDown = (event: Event): void => {
     const e = event as KeyboardEvent
-    // Prevent the page from scrolling when the player uses arrows/space.
-    if (
-      e.code === 'ArrowLeft' ||
-      e.code === 'ArrowRight' ||
-      e.code === 'Space'
-    ) {
+    if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Space'].includes(e.code)) {
       e.preventDefault()
     }
-    // Edge-detect Space: only latch on the initial press, not on auto-repeat.
-    if (e.code === 'Space' && !this.held.has('Space')) {
-      this.startPressed = true
+    // Edge-detect: only latch on the initial press, not on auto-repeat.
+    if (!this.held.has(e.code)) {
+      if (e.code === 'Space')      this.startPressed = true
+      if (e.code === 'ArrowUp')    this.upPressed    = true
+      if (e.code === 'ArrowDown')  this.downPressed  = true
+      if (e.code === 'ArrowLeft')  this.leftPressed  = true
+      if (e.code === 'ArrowRight') this.rightPressed = true
     }
     this.held.add(e.code)
   }
@@ -41,37 +42,43 @@ export class InputHandler {
     this.held.delete((event as KeyboardEvent).code)
   }
 
-  isLeft(): boolean {
-    return this.held.has('ArrowLeft')
-  }
-
-  isRight(): boolean {
-    return this.held.has('ArrowRight')
-  }
-
-  /** True while Space is held — used to fire (rate-limited by the Player). */
-  isShoot(): boolean {
-    return this.held.has('Space')
-  }
+  // Continuous (held) state queries.
+  isLeft():  boolean { return this.held.has('ArrowLeft') }
+  isRight(): boolean { return this.held.has('ArrowRight') }
+  isUp():    boolean { return this.held.has('ArrowUp') }
+  isDown():  boolean { return this.held.has('ArrowDown') }
 
   /**
-   * Edge-triggered Space read for menu transitions. Returns true exactly once
-   * per physical press, so a single tap starts/restarts the game instead of
-   * instantly skipping screens while the key is held.
+   * Edge-triggered reads — return `true` exactly once per physical key press.
+   * Used by Frogger so each arrow tap produces exactly one hop.
    */
   consumeStart(): boolean {
-    if (this.startPressed) {
-      this.startPressed = false
-      return true
-    }
+    if (this.startPressed) { this.startPressed = false; return true }
+    return false
+  }
+  consumeUp(): boolean {
+    if (this.upPressed)    { this.upPressed    = false; return true }
+    return false
+  }
+  consumeDown(): boolean {
+    if (this.downPressed)  { this.downPressed  = false; return true }
+    return false
+  }
+  consumeLeft(): boolean {
+    if (this.leftPressed)  { this.leftPressed  = false; return true }
+    return false
+  }
+  consumeRight(): boolean {
+    if (this.rightPressed) { this.rightPressed = false; return true }
     return false
   }
 
-  /** Remove listeners and clear state. Call on teardown to avoid leaks. */
+  /** Remove listeners and clear all state. Call on unmount to avoid leaks. */
   destroy(): void {
     this.target.removeEventListener('keydown', this.onKeyDown)
     this.target.removeEventListener('keyup', this.onKeyUp)
     this.held.clear()
-    this.startPressed = false
+    this.startPressed = this.upPressed = this.downPressed =
+      this.leftPressed = this.rightPressed = false
   }
 }

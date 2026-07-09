@@ -1,24 +1,24 @@
 {% extends "base.html" %}
 
-{% block title %}Space Invaders{% endblock %}
+{% block title %}Frogger{% endblock %}
 
 {% block content %}
 <main class="container mx-auto px-4 py-8 flex flex-col items-center">
-    <h1 class="text-3xl font-bold mb-6 text-gray-800">Space Invaders</h1>
+    <h1 class="text-3xl font-bold mb-6 text-gray-800">Frogger</h1>
 
     {# React Island Mount Point #}
     {# main.ts finds this element and mounts the GameIsland, which owns the #}
-    {# <canvas> and the pure-TypeScript SpaceInvaders engine. No props are #}
-    {# needed: the game is fully client-side with in-memory score tracking. #}
+    {# <canvas> and the pure-TypeScript Frogger engine. No props are needed: #}
+    {# the game is fully client-side with in-memory score tracking. #}
     <div data-island="game" class="flex justify-center">
         {# Fallback shown before JavaScript hydrates the canvas. #}
         <noscript>
-            <p class="text-gray-600">JavaScript is required to play Space Invaders.</p>
+            <p class="text-gray-600">JavaScript is required to play Frogger.</p>
         </noscript>
     </div>
 
     <p class="mt-6 text-gray-500 text-sm">
-        Move with &larr; &rarr; arrow keys &middot; Shoot with Space
+        Hop with &uarr; &darr; &larr; &rarr; arrow keys &middot; Ride logs &middot; Reach all five lily pads!
     </p>
 </main>
 {% endblock %}
