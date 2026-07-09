@@ -12,7 +12,7 @@ class LLMClient(Protocol):
         ...
 
 
-MAX_WORDS = 6000
+MAX_WORDS = 2000
 
 SYSTEM_PROMPT_TEMPLATE = """\
 You are a DevOps instructor assessing whether a student understands the homework solution they submitted.
