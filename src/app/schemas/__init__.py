@@ -2,6 +2,6 @@
 
 Exports all request/response schemas for API validation.
 """
-from .hello import HelloCreate, HelloResponse
+from .snake import ScoreCreate, ScoreResponse
 
-__all__ = ['HelloCreate', 'HelloResponse']
+__all__ = ['ScoreCreate', 'ScoreResponse']

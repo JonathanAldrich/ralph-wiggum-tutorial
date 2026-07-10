@@ -12,6 +12,6 @@ def register_blueprints(app: Flask) -> None:
     Args:
         app: Flask application instance
     """
-    from .hello import hello_bp
+    from .snake import snake_bp
 
-    app.register_blueprint(hello_bp)
+    app.register_blueprint(snake_bp)

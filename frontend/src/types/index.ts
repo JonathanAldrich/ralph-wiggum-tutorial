@@ -1,23 +1,25 @@
 /**
  * Shared TypeScript types for the application.
- * 
+ *
  * These types are used across islands, components, and API interactions.
  */
 
 /**
- * Hello record from the API.
+ * A leaderboard entry returned by the Snake API.
  */
-export interface Hello {
+export interface SnakeScore {
   id: number
-  message: string
+  player_name: string
+  score: number
   created_at: string
 }
 
 /**
- * Request payload for creating a new Hello.
+ * Request payload for submitting a completed Snake run.
  */
-export interface HelloCreate {
-  message: string
+export interface ScoreCreate {
+  player_name: string
+  score: number
 }
 
 /**
@@ -25,7 +27,7 @@ export interface HelloCreate {
  */
 export interface ApiError {
   error: string
-  message: string
+  message?: string
   details?: Record<string, unknown>[]
 }
 

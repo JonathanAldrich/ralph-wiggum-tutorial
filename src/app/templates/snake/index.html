@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}Snake - Ralph Wiggum Tutorial{% endblock %}
+
+{% block content %}
+<main class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-2 text-gray-800">🐍 Snake Arcade</h1>
+    <p class="text-gray-600 mb-6">
+        Use the arrow keys to steer. Eat food to grow and score. Avoid the walls
+        and your own tail. Press <kbd>Space</kbd> to start.
+    </p>
+
+    {# React Island Mount Point #}
+    {# The frontend JavaScript finds this element and mounts the SnakeIsland component. #}
+    {# data-props passes the initial leaderboard from the server to avoid a loading flash. #}
+    <div
+        data-island="snake"
+        data-props='{{ scores | tojson | safe }}'
+        class="bg-white rounded-lg shadow p-6"
+    >
+        {# Server-rendered fallback content — useful before/without hydration. #}
+        <noscript>
+            <p class="text-gray-600 mb-4">JavaScript is required to play Snake.</p>
+        </noscript>
+
+        <div class="animate-pulse">
+            <div class="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
+            <div class="h-4 bg-gray-200 rounded w-1/2"></div>
+        </div>
+    </div>
+
+    {# Server-rendered leaderboard as a no-JS fallback. #}
+    <section class="mt-8">
+        <h2 class="text-xl font-semibold mb-4 text-gray-700">Leaderboard (Server Rendered)</h2>
+        {% if scores %}
+            <ol class="space-y-2 list-decimal list-inside">
+                {% for score in scores %}
+                    <li class="p-3 bg-white rounded shadow-sm">
+                        <span class="font-medium">{{ score.player_name }}</span>
+                        <span class="text-gray-700 ml-2">{{ score.score }}</span>
+                    </li>
+                {% endfor %}
+            </ol>
+        {% else %}
+            <p class="text-gray-500">No scores yet. Be the first to make the leaderboard!</p>
+        {% endif %}
+    </section>
+</main>
+{% endblock %}
