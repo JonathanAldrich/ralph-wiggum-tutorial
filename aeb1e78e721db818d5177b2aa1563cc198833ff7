@@ -1,0 +1,35 @@
+Snake arcade implementation — design decisions & rationale
+
+WHY new `snake` modules + delete Hello (vs. in-place rename):
+- Clean separation and clearer diff; migration history preserved via a
+  forward migration (e31396db40b1 -> a1b2c3d4e5f6) rather than rewriting the
+  original hello migration.
+
+KEY DECISIONS:
+- Board 20x20, initial snake length 3 => MAX_SCORE 397. This bound lives in
+  BOTH schemas/snake.py and islands/snake/game.ts and MUST stay in sync; it
+  doubles as an anti-spoofing guard on POSTed scores.
+- Leaderboard order: score DESC, then earliest created_at, then id (stable,
+  deterministic tie-breaker) — asserted in tests/test_snake.py.
+- Score >= 1 required (only completed scoring runs stored). To make e2e
+  deterministic AND yield a savable score, createInitialState() spawns the
+  first food directly ahead of the head, so the opening rightward move always
+  scores before the player steers into a wall.
+
+GOTCHAS ENCOUNTERED:
+- Pydantic custom field_validator raises ValueError, which lands in the error
+  ctx and is NOT JSON-serializable. Fixed by serializing validation errors
+  with e.errors(include_context=False, include_url=False) in views/snake.py.
+- Dev Postgres alembic_version pointed at a dangling revision f1a2b3c4d5e6
+  with zero tables; `flask db stamp/upgrade` errored. Recovered via a one-off
+  `DELETE FROM alembic_version` then `flask db upgrade`.
+- Pre-commit runs mypy in strict mode over STAGED test files (script/typecheck
+  only covers src/). Test methods need `-> None`; the FlaskClient fixture is
+  typed as `Any` because strict disallow_any_generics rejects the bare generic.
+- Playwright strict-mode: player name renders in both the island and the
+  server-rendered fallback leaderboard, so the reload assertion uses .first().
+
+GAME LOOP: fixed-timestep via a ref-backed useInterval hook to avoid React
+stale-closure bugs; keyboard input buffered in a ref and reversal-guarded on
+each tick; arrow keys preventDefault to stop page scroll; listeners cleaned up
+on unmount to prevent stacked controls across remounts.
